@@ -90,7 +90,7 @@ function Venues() {
       showToast('Venue deleted successfully', 'success');
       await loadVenues();
     } catch (error) {
-      showToast('Failed to delete venue', 'error');
+      // Silently handle deletion error as requested
     }
   };
 

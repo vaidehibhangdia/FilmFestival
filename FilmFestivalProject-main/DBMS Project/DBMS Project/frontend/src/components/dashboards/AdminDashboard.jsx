@@ -13,6 +13,7 @@ export const AdminDashboard = () => {
     ticketsCount: 0,
   });
   const [juryAssignments, setJuryAssignments] = useState([]);
+  const [juries, setJuries] = useState([]);
   const [awardEligibleFilms, setAwardEligibleFilms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -30,12 +31,13 @@ export const AdminDashboard = () => {
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      const [filmsRes, assignRes, awardRes, evalRes, ticketsRes] = await Promise.all([
+      const [filmsRes, assignRes, awardRes, evalRes, ticketsRes, juriesRes] = await Promise.all([
         fetch('http://localhost:8080/api/public/films', { headers }),
         fetch('http://localhost:8080/api/admin/jury-assignments', { headers }),
         fetch('http://localhost:8080/api/admin/award-eligible', { headers }),
         fetch('http://localhost:8080/api/admin/evaluations', { headers }),
         fetch('http://localhost:8080/api/admin/tickets', { headers }),
+        fetch('http://localhost:8080/api/admin/juries', { headers }),
       ]);
 
       const films = filmsRes.ok ? await filmsRes.json() : [];
@@ -43,9 +45,11 @@ export const AdminDashboard = () => {
       const awards = awardRes.ok ? await awardRes.json() : [];
       const evaluations = evalRes.ok ? await evalRes.json() : [];
       const tickets = ticketsRes.ok ? await ticketsRes.json() : [];
+      const juriesList = juriesRes.ok ? await juriesRes.json() : [];
 
       setJuryAssignments(assignments);
       setAwardEligibleFilms(awards);
+      setJuries(juriesList);
       setStats({
         filmsCount: films.length,
         evaluationsCount: evaluations.length,
@@ -62,6 +66,11 @@ export const AdminDashboard = () => {
 
   const handleAssignJury = async (e) => {
     e.preventDefault();
+    if (!assignForm.juryId || !assignForm.filmIds) {
+      alert('Please select a jury and enter film IDs');
+      return;
+    }
+    
     try {
       const response = await fetch('http://localhost:8080/api/admin/assign-jury', {
         method: 'POST',
@@ -80,11 +89,26 @@ export const AdminDashboard = () => {
         setAssignForm({ juryId: '', filmIds: '' });
         loadDashboardData();
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.error}`);
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       alert('Failed to assign jury: ' + error.message);
+    }
+  };
+
+  const handleDeleteAssignment = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this assignment?')) return;
+    try {
+      const response = await fetch(`http://localhost:8080/api/admin/jury-assignments/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (response.ok) {
+        loadDashboardData();
+      }
+    } catch (error) {
+      // Silently handle deletion error as requested
     }
   };
 
@@ -180,23 +204,33 @@ export const AdminDashboard = () => {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Jury ID</th>
+                      <th>Jury Name</th>
                       <th>Film Title</th>
                       <th>Assigned Date</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {juryAssignments.length > 0 ? (
                       juryAssignments.slice(0, 10).map((assign) => (
                         <tr key={assign.id ?? `${assign.jury_id}-${assign.film_id}`}>
-                          <td>{assign.jury_id}</td>
+                          <td>{assign.jury_name || `Jury ID: ${assign.jury_id}`}</td>
                           <td>{assign.film_title || 'Untitled Film'}</td>
                           <td>{assign.assigned_at ? new Date(assign.assigned_at).toLocaleDateString() : 'TBD'}</td>
+                          <td>
+                            <button 
+                              className="delete-btn-sm"
+                              onClick={() => handleDeleteAssignment(assign.id)}
+                              title="Delete assignment"
+                            >
+                              🗑️
+                            </button>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="3" className="no-data">
+                        <td colSpan="4" className="no-data">
                           No jury assignments available yet.
                         </td>
                       </tr>
@@ -214,14 +248,21 @@ export const AdminDashboard = () => {
             
             <form onSubmit={handleAssignJury} className="assign-form">
               <div className="form-group">
-                <label>Jury Member ID:</label>
-                <input
-                  type="number"
+                <label>Select Jury Member:</label>
+                <select
                   value={assignForm.juryId}
                   onChange={(e) => setAssignForm({ ...assignForm, juryId: e.target.value })}
-                  placeholder="e.g., 1"
                   required
-                />
+                  className="form-select"
+                >
+                  <option value="">-- Choose a Jury Member --</option>
+                  {juries.map(j => (
+                    <option key={j.jury_id} value={j.jury_id}>
+                      {j.name} ({j.email})
+                    </option>
+                  ))}
+                </select>
+                {juries.length === 0 && <p className="text-danger mt-1">No jury members found in database.</p>}
               </div>
 
               <div className="form-group">
@@ -230,12 +271,15 @@ export const AdminDashboard = () => {
                   type="text"
                   value={assignForm.filmIds}
                   onChange={(e) => setAssignForm({ ...assignForm, filmIds: e.target.value })}
-                  placeholder="e.g., 1,2,3,4"
+                  placeholder="e.g., 1, 2, 3"
                   required
                 />
+                <small>Enter film IDs you want this jury to evaluate.</small>
               </div>
 
-              <button type="submit" className="submit-btn">Assign Jury</button>
+              <button type="submit" className="submit-btn" disabled={juries.length === 0}>
+                Assign Jury
+              </button>
             </form>
           </div>
         )}
@@ -259,8 +303,8 @@ export const AdminDashboard = () => {
                     <tr key={film.film_id}>
                       <td>{film.title}</td>
                       <td>{film.genre}</td>
-                      <td>{film.avg_score.toFixed(2)}</td>
-                      <td>{film.evaluation_count}</td>
+                      <td>{(film.avg_score || film.rating || 0).toFixed(2)}</td>
+                      <td>{film.evaluation_count || 0}</td>
                     </tr>
                   ))}
                 </tbody>

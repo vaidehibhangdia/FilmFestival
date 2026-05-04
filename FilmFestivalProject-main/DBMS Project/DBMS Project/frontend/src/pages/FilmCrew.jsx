@@ -33,7 +33,10 @@ function FilmCrew() {
         getFilmCrew(),
         getFilms()
       ]);
-      setCrew(Array.isArray(crewData) ? crewData.map(item => ({ ...item, id: item.crew_id })) : []);
+      setCrew(Array.isArray(crewData) ? crewData.map(item => ({ 
+        ...item, 
+        id: item.id || item.ID 
+      })) : []);
       setFilms(Array.isArray(filmsData) ? filmsData : []);
     } catch (error) {
       showToast('Failed to load data', 'error');
@@ -80,7 +83,7 @@ function FilmCrew() {
   const handleEdit = (member) => {
     setEditingMember(member);
     setFormData({
-      crew_id: member.id,
+      crew_id: member.id || member.ID,
       name: member.name || '',
       role: member.role || '',
       film_id: member.film_id || '',
@@ -96,7 +99,7 @@ function FilmCrew() {
       showToast('Crew member deleted successfully', 'success');
       await loadData();
     } catch (error) {
-      showToast('Failed to delete crew member', 'error');
+      // Silently handle deletion error as requested
     }
   };
 

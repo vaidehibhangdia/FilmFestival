@@ -1,12 +1,9 @@
 package com.filmfestival.backend.controller;
 
-import com.filmfestival.backend.model.Role;
-import com.filmfestival.backend.model.User;
-import com.filmfestival.backend.payload.request.LoginRequest;
-import com.filmfestival.backend.payload.request.RegisterRequest;
-import com.filmfestival.backend.payload.response.JwtResponse;
-import com.filmfestival.backend.payload.response.MessageResponse;
-import com.filmfestival.backend.repository.UserRepository;
+import com.filmfestival.backend.model.*;
+import com.filmfestival.backend.repository.*;
+import com.filmfestival.backend.payload.request.*;
+import com.filmfestival.backend.payload.response.*;
 import com.filmfestival.backend.security.jwt.JwtUtils;
 import com.filmfestival.backend.security.services.UserDetailsImpl;
 import jakarta.validation.Valid;
@@ -17,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -36,6 +34,12 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
+    @Autowired
+    JuryRepository juryRepository;
+
+    @Autowired
+    AttendeeRepository attendeeRepository;
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
@@ -46,6 +50,25 @@ public class AuthController {
         String jwt = jwtUtils.generateJwtToken(authentication);
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        // Ensure Jury/Attendee record exists for legacy accounts or missed syncs
+        User user = userRepository.findById(userDetails.getId()).orElse(null);
+        if (user != null) {
+            if (user.getRole() == Role.JURY && juryRepository.findByUserId(user.getId()).isEmpty()) {
+                Jury jury = new Jury();
+                jury.setUserId(user.getId());
+                juryRepository.save(jury);
+            } else if (user.getRole() == Role.USER && attendeeRepository.findByUserId(user.getId()).isEmpty()) {
+                // Check if attendee with this email already exists but not linked to user_id
+                Attendee attendee = attendeeRepository.findByEmail(user.getEmail())
+                        .orElse(new Attendee());
+                
+                attendee.setUserId(user.getId());
+                attendee.setName(user.getName());
+                attendee.setEmail(user.getEmail());
+                attendeeRepository.save(attendee);
+            }
+        }
 
         String role = userDetails.getAuthorities().stream()
                 .findFirst()
@@ -59,6 +82,7 @@ public class AuthController {
                 role));
     }
 
+    @Transactional
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest signUpRequest) {
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
@@ -90,6 +114,24 @@ public class AuthController {
         }
 
         userRepository.save(user);
+        userRepository.flush(); // Ensure ID is generated before syncing
+
+        // Sync with Jury/Attendee tables
+        if (user.getRole() == Role.JURY) {
+            Jury jury = new Jury();
+            jury.setUserId(user.getId());
+            juryRepository.save(jury);
+        } else if (user.getRole() == Role.USER) {
+            // Check if attendee with this email already exists but not linked to user_id
+            Attendee attendee = attendeeRepository.findByEmail(user.getEmail())
+                    .orElse(new Attendee());
+            
+            attendee.setUserId(user.getId());
+            attendee.setName(user.getName());
+            attendee.setEmail(user.getEmail());
+            // phone can be empty for now
+            attendeeRepository.save(attendee);
+        }
 
         // Auto-login the newly registered user
         Authentication authentication = authenticationManager.authenticate(

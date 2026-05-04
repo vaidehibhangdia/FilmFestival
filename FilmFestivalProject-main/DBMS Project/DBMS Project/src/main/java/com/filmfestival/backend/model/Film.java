@@ -1,5 +1,6 @@
 package com.filmfestival.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -13,7 +14,8 @@ public class Film {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "film_id")
-    private Long id;
+    @JsonProperty("film_id")
+    private Integer id;
 
     private String title;
     private String director;
@@ -23,6 +25,7 @@ public class Film {
     private String description;
 
     @Column(name = "duration_minutes")
+    @JsonProperty("runtime")
     private Integer durationMinutes;
 
     @Column(name = "release_year")

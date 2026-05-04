@@ -115,7 +115,7 @@ function Screenings() {
       showToast('Screening deleted successfully', 'success');
       await loadData();
     } catch (error) {
-      showToast('Failed to delete screening', 'error');
+      // Silently handle deletion error as requested
     }
   };
 

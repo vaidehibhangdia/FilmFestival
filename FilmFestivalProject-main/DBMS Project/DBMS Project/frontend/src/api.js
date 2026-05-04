@@ -53,7 +53,17 @@ export async function request(path, options = {}) {
     return null;
   }
 
-  return response.json();
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('[API Parse Error]', { text, error: e.message });
+    return text; // Return as plain text if it's not valid JSON
+  }
 }
 
 export const fetchApi = request;

@@ -38,8 +38,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Login failed');
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.error || 'Login failed');
       }
 
       const data = await response.json();
@@ -74,8 +74,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Registration failed');
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.error || 'Registration failed');
       }
 
       const data = await response.json();

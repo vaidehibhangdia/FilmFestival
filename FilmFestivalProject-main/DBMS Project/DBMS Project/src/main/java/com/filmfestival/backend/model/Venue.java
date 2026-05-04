@@ -1,5 +1,6 @@
 package com.filmfestival.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ public class Venue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "venue_id")
+    @JsonProperty("venue_id")
     private Integer venueId;
 
     @Column(nullable = false, unique = true)

@@ -181,7 +181,7 @@ function Tickets() {
       showToast('Ticket deleted successfully', 'success');
       await loadData();
     } catch (error) {
-      showToast('Failed to delete ticket', 'error');
+      // Silently handle deletion error as requested
     }
   };
 

@@ -15,7 +15,7 @@ function Awards() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const formModal = useModal();
-  
+
   const emptyForm = {
     award_id: '',
     award_name: '',
@@ -24,7 +24,7 @@ function Awards() {
     award_type: 'film',
     year: new Date().getFullYear(),
   };
-  
+
   const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState({});
 
@@ -96,7 +96,7 @@ function Awards() {
       showToast('Award deleted successfully', 'success');
       await loadData();
     } catch (error) {
-      showToast('Failed to delete award', 'error');
+      // Silently handle deletion error as requested
     }
   };
 
@@ -143,10 +143,10 @@ function Awards() {
                         <h3 className="film-title">{film.title}</h3>
                         <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{film.genre}</p>
                       </div>
-                      <div className="badge accent">{film.avg_score.toFixed(1)} / 10</div>
+                      <div className="badge accent">{(film.avg_score || film.rating || 0).toFixed(1)} / 10</div>
                     </div>
                     <p style={{ fontSize: '13px', margin: '12px 0', color: 'var(--text-secondary)' }}>
-                      Highly rated by {film.evaluation_count} jury members.
+                      Highly rated {film.evaluation_count > 0 ? `by ${film.evaluation_count} jury members` : '(System Rating)'}.
                     </p>
                     <Button variant="primary" size="sm" fullWidth onClick={() => handleDeclareFromSuggestion(film)}>
                       Declare Award
@@ -207,7 +207,7 @@ function Awards() {
                       </div>
                       <div className="meta-item">
                         <span className="label">Winner</span>
-                        <span className="value" style={{fontSize: '12px'}}>
+                        <span className="value" style={{ fontSize: '12px' }}>
                           {film ? `🎬 ${film.title}` : crew ? `🎭 ${crew.name}` : 'N/A'}
                         </span>
                       </div>

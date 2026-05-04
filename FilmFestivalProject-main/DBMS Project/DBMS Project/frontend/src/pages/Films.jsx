@@ -128,7 +128,7 @@ function Films() {
       showToast('Film deleted successfully', 'success');
       await loadFilms();
     } catch (error) {
-      showToast('Failed to delete film', 'error');
+      // Silently handle deletion error as requested
     }
   };
 

@@ -91,7 +91,7 @@ function Attendees() {
       showToast('Attendee deleted successfully', 'success');
       await loadAttendees();
     } catch (error) {
-      showToast('Failed to delete attendee', 'error');
+      // Silently handle deletion error as requested
     }
   };
 

@@ -13,8 +13,9 @@ export const UserDashboard = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedFilm, setSelectedFilm] = useState(null);
   const [screenings, setScreenings] = useState([]);
-  const [selectedScreening, setSelectedScreening] = useState('');
-  const [seatNumber, setSeatNumber] = useState('');
+  const [selectedScreening, setSelectedScreening] = useState(null);
+  const [occupiedSeats, setOccupiedSeats] = useState([]);
+  const [selectedSeats, setSelectedSeats] = useState([]);
   const [bookingStatus, setBookingStatus] = useState({ loading: false, error: '', success: false });
 
   useEffect(() => {
@@ -44,8 +45,14 @@ export const UserDashboard = () => {
     setSelectedFilm(film);
     setShowBookingModal(true);
     setBookingStatus({ loading: true, error: '', success: false });
+    setScreenings([]);
+    setSelectedScreening(null);
+    setOccupiedSeats([]);
+    setSelectedSeats([]);
+    
     try {
-      const res = await fetch(`http://localhost:8080/api/screenings?film_id=${film.film_id}`, {
+      // FIX: Use public screenings endpoint with film_id
+      const res = await fetch(`http://localhost:8080/api/public/screenings?film_id=${film.film_id}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (res.ok) {
@@ -59,9 +66,37 @@ export const UserDashboard = () => {
     }
   };
 
+  const handleSelectScreening = async (screening) => {
+    setSelectedScreening(screening);
+    setSelectedSeats([]);
+    setBookingStatus(prev => ({ ...prev, loading: true }));
+    try {
+      const res = await fetch(`http://localhost:8080/api/user/occupied-seats?screening_id=${screening.screening_id}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setOccupiedSeats(await res.json());
+      }
+    } catch (err) {
+      console.error('Failed to load occupied seats');
+    } finally {
+      setBookingStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const toggleSeatSelection = (seatId) => {
+    setSelectedSeats(prev => {
+      if (prev.includes(seatId)) {
+        return prev.filter(id => id !== seatId);
+      } else {
+        return [...prev, seatId];
+      }
+    });
+  };
+
   const handleBookTicket = async (e) => {
     e.preventDefault();
-    if (!selectedScreening || !seatNumber) return;
+    if (!selectedScreening || selectedSeats.length === 0) return;
 
     setBookingStatus({ loading: true, error: '', success: false });
     try {
@@ -72,8 +107,8 @@ export const UserDashboard = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          screening_id: selectedScreening,
-          seat_number: seatNumber
+          screening_id: selectedScreening.screening_id,
+          seat_numbers: selectedSeats
         })
       });
 
@@ -82,8 +117,8 @@ export const UserDashboard = () => {
         loadDashboardData(); // Refresh bookings
         setTimeout(() => {
           setShowBookingModal(false);
-          setSelectedScreening('');
-          setSeatNumber('');
+          setSelectedScreening(null);
+          setSelectedSeats([]);
         }, 2000);
       } else {
         const err = await res.json();
@@ -92,6 +127,74 @@ export const UserDashboard = () => {
     } catch (err) {
       setBookingStatus({ loading: false, error: 'Network error', success: false });
     }
+  };
+
+  const renderSeatMap = () => {
+    if (!selectedScreening) return null;
+    
+    const rows = ['A', 'B', 'C', 'D', 'E'];
+    const cols = [1, 2, 3, 4, 5, 6, 7, 8];
+    const totalPrice = selectedSeats.length * selectedScreening.ticket_price;
+    
+    return (
+      <div className="seat-map-container">
+        <div className="screen-visual"></div>
+        <div className="seat-grid">
+          {rows.map(row => (
+            <div key={row} className="seat-row">
+              <span className="row-label">{row}</span>
+              {cols.map(col => {
+                const seatId = `${row}${col}`;
+                const isOccupied = occupiedSeats.includes(seatId);
+                const isSelected = selectedSeats.includes(seatId);
+                
+                return (
+                  <div 
+                    key={seatId} 
+                    className={`seat ${isOccupied ? 'occupied' : ''} ${isSelected ? 'selected' : ''}`}
+                    onClick={() => !isOccupied && toggleSeatSelection(seatId)}
+                    title={isOccupied ? 'Occupied' : `Seat ${seatId}`}
+                  >
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        
+        <div className="seat-legend">
+          <div className="legend-item">
+            <div className="legend-box available"></div>
+            <span>Available</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-box selected"></div>
+            <span>Selected</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-box occupied"></div>
+            <span>Occupied</span>
+          </div>
+        </div>
+
+        {selectedSeats.length > 0 && (
+          <div className="selected-seat-info-premium">
+            <div className="info-row">
+              <span>Selected Seats: </span>
+              <strong>{selectedSeats.join(', ')}</strong>
+            </div>
+            <div className="info-row">
+              <span>Quantity: </span>
+              <strong>{selectedSeats.length}</strong>
+            </div>
+            <div className="info-total">
+              <span>Total Price: </span>
+              <strong>₹{totalPrice}</strong>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (loading) {
@@ -196,10 +299,11 @@ export const UserDashboard = () => {
                       <div className="ticket-details">
                         <div><i className="fas fa-calendar me-2"></i>{new Date(booking.screening_date).toLocaleDateString()}</div>
                         <div><i className="fas fa-chair me-2"></i>Seat: {booking.seat_number}</div>
+                        <div><i className="fas fa-map-marker-alt me-2"></i>{booking.venue_name}</div>
                       </div>
                     </div>
                     <div className="ticket-right">
-                      <div className="ticket-price">₹{booking.total_price.toFixed(0)}</div>
+                      <div className="ticket-price">₹{booking.total_price?.toFixed(0) || booking.ticket_price}</div>
                       <div className="ticket-id">#{booking.ticket_id}</div>
                     </div>
                   </div>
@@ -217,12 +321,12 @@ export const UserDashboard = () => {
                 <h3>Book Ticket: {selectedFilm?.title}</h3>
                 <button className="close-btn" onClick={() => setShowBookingModal(false)}>&times;</button>
               </div>
-              <form onSubmit={handleBookTicket} className="booking-form">
+              <div className="booking-form">
                 {bookingStatus.error && <div className="alert alert-danger">{bookingStatus.error}</div>}
                 {bookingStatus.success && <div className="alert alert-success">Booking Successful! Redirecting...</div>}
                 
                 <div className="form-group">
-                  <label>Select Screening</label>
+                  <label>1. Select Screening</label>
                   {bookingStatus.loading && !screenings.length ? (
                     <p>Loading screenings...</p>
                   ) : screenings.length === 0 ? (
@@ -232,8 +336,8 @@ export const UserDashboard = () => {
                       {screenings.map(s => (
                         <div 
                           key={s.screening_id} 
-                          className={`screening-opt ${selectedScreening === s.screening_id ? 'active' : ''}`}
-                          onClick={() => setSelectedScreening(s.screening_id)}
+                          className={`screening-opt ${selectedScreening?.screening_id === s.screening_id ? 'active' : ''}`}
+                          onClick={() => handleSelectScreening(s)}
                         >
                           <div className="date">{new Date(s.screening_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                           <div className="time">{s.start_time.substring(0, 5)}</div>
@@ -245,29 +349,25 @@ export const UserDashboard = () => {
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label>Enter Seat Number (e.g. A1, B5)</label>
-                  <input 
-                    type="text" 
-                    value={seatNumber} 
-                    onChange={(e) => setSeatNumber(e.target.value.toUpperCase())}
-                    placeholder="A1"
-                    maxLength="3"
-                    required
-                  />
-                </div>
+                {selectedScreening && (
+                  <div className="form-group">
+                    <label>2. Choose Your Seat</label>
+                    {renderSeatMap()}
+                  </div>
+                )}
 
                 <div className="modal-footer">
                   <button type="button" className="btn-secondary" onClick={() => setShowBookingModal(false)}>Cancel</button>
                   <button 
-                    type="submit" 
+                    type="button" 
                     className="btn-primary" 
-                    disabled={!selectedScreening || !seatNumber || bookingStatus.loading || bookingStatus.success}
+                    onClick={handleBookTicket}
+                    disabled={!selectedScreening || selectedSeats.length === 0 || bookingStatus.loading || bookingStatus.success}
                   >
                     {bookingStatus.loading ? 'Processing...' : 'Confirm Booking'}
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         )}
