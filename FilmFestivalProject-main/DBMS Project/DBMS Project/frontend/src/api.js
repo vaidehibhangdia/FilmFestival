@@ -75,7 +75,7 @@ export const getCurrentUser = () => request('/auth/me');
 
 // ==================== FILM ENDPOINTS ====================
 export const getFilms = (genre, language, sortBy) => {
-  let path = '/films';
+  let path = '/public/films';
   const params = [];
   if (genre) params.push(`genre=${genre}`);
   if (language) params.push(`language=${language}`);
@@ -84,11 +84,11 @@ export const getFilms = (genre, language, sortBy) => {
   return request(path);
 };
 
-export const getFilmById = (id) => request(`/films/${id}`);
-export const createFilm = (film) => request('/films', { method: 'POST', body: JSON.stringify(film) });
-export const updateFilm = (id, film) => request(`/films/${id}`, { method: 'PUT', body: JSON.stringify(film) });
-export const deleteFilm = (id) => request(`/films/${id}`, { method: 'DELETE' });
-export const getTopRatedFilms = () => request('/films/leaderboard');
+export const getFilmById = (id) => request(`/public/films/${id}`);
+export const createFilm = (film) => request('/admin/films', { method: 'POST', body: JSON.stringify(film) });
+export const updateFilm = (id, film) => request(`/admin/films/${id}`, { method: 'PUT', body: JSON.stringify(film) });
+export const deleteFilm = (id) => request(`/admin/films/${id}`, { method: 'DELETE' });
+export const getTopRatedFilms = () => request('/public/films/leaderboard');
 
 // ==================== ADMIN ENDPOINTS ====================
 export const assignJury = (juryId, filmIds) =>
@@ -120,32 +120,32 @@ export const bookTicket = (screeningId, seatCount) =>
   });
 
 // ==================== LEGACY ENDPOINTS (for backwards compatibility) ====================
-export const getAttendees = () => request('/attendees');
-export const createAttendee = (attendee) => request('/attendees', { method: 'POST', body: JSON.stringify(attendee) });
-export const updateAttendee = (id, attendee) => request(`/attendees/${id}`, { method: 'PUT', body: JSON.stringify(attendee) });
-export const deleteAttendee = (id) => request(`/attendees/${id}`, { method: 'DELETE' });
+export const getAttendees = () => request('/admin/attendees');
+export const createAttendee = (attendee) => request('/admin/attendees', { method: 'POST', body: JSON.stringify(attendee) });
+export const updateAttendee = (id, attendee) => request(`/admin/attendees/${id}`, { method: 'PUT', body: JSON.stringify(attendee) });
+export const deleteAttendee = (id) => request(`/admin/attendees/${id}`, { method: 'DELETE' });
 
-export const getAwards = () => request('/awards');
-export const createAward = (award) => request('/awards', { method: 'POST', body: JSON.stringify(award) });
-export const updateAward = (id, award) => request(`/awards/${id}`, { method: 'PUT', body: JSON.stringify(award) });
-export const deleteAward = (id) => request(`/awards/${id}`, { method: 'DELETE' });
+export const getAwards = () => request('/admin/awards');
+export const createAward = (award) => request('/admin/awards', { method: 'POST', body: JSON.stringify(award) });
+export const updateAward = (id, award) => request(`/admin/awards/${id}`, { method: 'PUT', body: JSON.stringify(award) });
+export const deleteAward = (id) => request(`/admin/awards/${id}`, { method: 'DELETE' });
 
-export const getVenues = () => request('/venues');
-export const createVenue = (venue) => request('/venues', { method: 'POST', body: JSON.stringify(venue) });
-export const updateVenue = (id, venue) => request(`/venues/${id}`, { method: 'PUT', body: JSON.stringify(venue) });
-export const deleteVenue = (id) => request(`/venues/${id}`, { method: 'DELETE' });
+export const getVenues = () => request('/admin/venues');
+export const createVenue = (venue) => request('/admin/venues', { method: 'POST', body: JSON.stringify(venue) });
+export const updateVenue = (id, venue) => request(`/admin/venues/${id}`, { method: 'PUT', body: JSON.stringify(venue) });
+export const deleteVenue = (id) => request(`/admin/venues/${id}`, { method: 'DELETE' });
 
-export const getFilmCrew = () => request('/filmcrew');
-export const createFilmCrew = (crew) => request('/filmcrew', { method: 'POST', body: JSON.stringify(crew) });
-export const updateFilmCrew = (id, crew) => request(`/filmcrew/${id}`, { method: 'PUT', body: JSON.stringify(crew) });
-export const deleteFilmCrew = (id) => request(`/filmcrew/${id}`, { method: 'DELETE' });
+export const getFilmCrew = () => request('/admin/filmcrew');
+export const createFilmCrew = (crew) => request('/admin/filmcrew', { method: 'POST', body: JSON.stringify(crew) });
+export const updateFilmCrew = (id, crew) => request(`/admin/filmcrew/${id}`, { method: 'PUT', body: JSON.stringify(crew) });
+export const deleteFilmCrew = (id) => request(`/admin/filmcrew/${id}`, { method: 'DELETE' });
 
-export const getScreenings = () => request('/screenings');
-export const createScreening = (screening) => request('/screenings', { method: 'POST', body: JSON.stringify(screening) });
-export const updateScreening = (id, screening) => request(`/screenings/${id}`, { method: 'PUT', body: JSON.stringify(screening) });
-export const deleteScreening = (id) => request(`/screenings/${id}`, { method: 'DELETE' });
+export const getScreenings = () => request('/admin/screenings');
+export const createScreening = (screening) => request('/admin/screenings', { method: 'POST', body: JSON.stringify(screening) });
+export const updateScreening = (id, screening) => request(`/admin/screenings/${id}`, { method: 'PUT', body: JSON.stringify(screening) });
+export const deleteScreening = (id) => request(`/admin/screenings/${id}`, { method: 'DELETE' });
 
-export const getTickets = () => request('/tickets');
-export const createTicket = (ticket) => request('/tickets', { method: 'POST', body: JSON.stringify(ticket) });
-export const updateTicket = (id, ticket) => request(`/tickets/${id}`, { method: 'PUT', body: JSON.stringify(ticket) });
-export const deleteTicket = (id) => request(`/tickets/${id}`, { method: 'DELETE' });
+export const getTickets = () => request('/admin/tickets');
+export const createTicket = (ticket) => request('/admin/tickets', { method: 'POST', body: JSON.stringify(ticket) });
+export const updateTicket = (id, ticket) => request(`/admin/tickets/${id}`, { method: 'PUT', body: JSON.stringify(ticket) });
+export const deleteTicket = (id) => request(`/admin/tickets/${id}`, { method: 'DELETE' });

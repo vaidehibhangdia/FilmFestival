@@ -10,6 +10,7 @@ export const AdminDashboard = () => {
     evaluationsCount: 0,
     juryMembersCount: 0,
     awardEligibleCount: 0,
+    ticketsCount: 0,
   });
   const [juryAssignments, setJuryAssignments] = useState([]);
   const [awardEligibleFilms, setAwardEligibleFilms] = useState([]);
@@ -29,17 +30,19 @@ export const AdminDashboard = () => {
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      const [filmsRes, assignRes, awardRes, evalRes] = await Promise.all([
-        fetch('http://localhost:8080/api/films', { headers }),
+      const [filmsRes, assignRes, awardRes, evalRes, ticketsRes] = await Promise.all([
+        fetch('http://localhost:8080/api/public/films', { headers }),
         fetch('http://localhost:8080/api/admin/jury-assignments', { headers }),
         fetch('http://localhost:8080/api/admin/award-eligible', { headers }),
         fetch('http://localhost:8080/api/admin/evaluations', { headers }),
+        fetch('http://localhost:8080/api/admin/tickets', { headers }),
       ]);
 
       const films = filmsRes.ok ? await filmsRes.json() : [];
       const assignments = assignRes.ok ? await assignRes.json() : [];
       const awards = awardRes.ok ? await awardRes.json() : [];
       const evaluations = evalRes.ok ? await evalRes.json() : [];
+      const tickets = ticketsRes.ok ? await ticketsRes.json() : [];
 
       setJuryAssignments(assignments);
       setAwardEligibleFilms(awards);
@@ -48,6 +51,7 @@ export const AdminDashboard = () => {
         evaluationsCount: evaluations.length,
         juryMembersCount: assignments.length,
         awardEligibleCount: awards.length,
+        ticketsCount: tickets.length,
       });
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -163,6 +167,10 @@ export const AdminDashboard = () => {
               <div className="stat-card">
                 <div className="stat-value">{stats.awardEligibleCount}</div>
                 <div className="stat-label">Award Eligible Films</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{stats.ticketsCount}</div>
+                <div className="stat-label">Tickets Booked</div>
               </div>
             </div>
 

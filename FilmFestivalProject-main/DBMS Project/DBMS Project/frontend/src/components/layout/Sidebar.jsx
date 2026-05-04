@@ -14,7 +14,6 @@ export const Sidebar = () => {
     { path: '/films', icon: '🎬', label: 'Films' },
     { path: '/venues', icon: '🎪', label: 'Venues' },
     { path: '/screenings', icon: '📽️', label: 'Screenings' },
-    { path: '/tickets', icon: '🎟️', label: 'Tickets' },
     { path: '/attendees', icon: '👥', label: 'Attendees' },
     { path: '/filmcrew', icon: '🎭', label: 'Film Crew' },
     { path: '/awards', icon: '🏆', label: 'Awards' },

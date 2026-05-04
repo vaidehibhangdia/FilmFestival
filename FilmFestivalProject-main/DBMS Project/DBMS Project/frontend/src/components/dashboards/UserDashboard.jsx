@@ -24,7 +24,7 @@ export const UserDashboard = () => {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const filmsRes = await fetch('http://localhost:8080/api/films', {
+      const filmsRes = await fetch('http://localhost:8080/api/public/films', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (filmsRes.ok) setFilms(await filmsRes.json());

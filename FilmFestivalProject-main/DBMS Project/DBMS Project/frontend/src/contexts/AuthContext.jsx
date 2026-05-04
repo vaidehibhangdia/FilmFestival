@@ -44,12 +44,19 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       
+      const userObj = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.role
+      };
+      
       localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('user', JSON.stringify(userObj));
       setToken(data.token);
-      setUser(data.user);
+      setUser(userObj);
 
-      return data.user;
+      return userObj;
     } catch (err) {
       setError(err.message);
       throw err;
@@ -73,12 +80,19 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       
+      const userObj = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.role
+      };
+      
       localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('user', JSON.stringify(userObj));
       setToken(data.token);
-      setUser(data.user);
+      setUser(userObj);
 
-      return data.user;
+      return userObj;
     } catch (err) {
       setError(err.message);
       throw err;

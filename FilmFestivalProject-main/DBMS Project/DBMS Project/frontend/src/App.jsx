@@ -14,7 +14,6 @@ import Attendees from './pages/Attendees';
 import Awards from './pages/Awards';
 import FilmCrew from './pages/FilmCrew';
 import Screenings from './pages/Screenings';
-import Tickets from './pages/Tickets';
 import Venues from './pages/Venues';
 import Settings from './pages/Settings';
 
@@ -77,7 +76,6 @@ function App() {
                     <Route path="/awards" element={<RoleBasedRoute requiredRoles={['ADMIN']}><Awards /></RoleBasedRoute>} />
                     <Route path="/filmcrew" element={<RoleBasedRoute requiredRoles={['ADMIN']}><FilmCrew /></RoleBasedRoute>} />
                     <Route path="/screenings" element={<RoleBasedRoute requiredRoles={['ADMIN']}><Screenings /></RoleBasedRoute>} />
-                    <Route path="/tickets" element={<RoleBasedRoute requiredRoles={['ADMIN']}><Tickets /></RoleBasedRoute>} />
                     <Route path="/venues" element={<RoleBasedRoute requiredRoles={['ADMIN']}><Venues /></RoleBasedRoute>} />
                     
                     <Route path="*" element={<Navigate to="/" replace />} />
